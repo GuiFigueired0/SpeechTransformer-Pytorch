@@ -1,3 +1,13 @@
+*.flac
+*.wav
+LibriSpeech/dev-clean/
+LibriSpeech/dev-other/
+LibriSpeech/test-clean/
+LibriSpeech/test-other/
+LibriSpeech/train-clean-100/
+
+test_model.py
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
