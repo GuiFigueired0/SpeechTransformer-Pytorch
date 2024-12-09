@@ -5,8 +5,8 @@ LibriSpeech/dev-other/
 LibriSpeech/test-clean/
 LibriSpeech/test-other/
 LibriSpeech/train-clean-100/
-
-test_model.py
+LibriSpeech/train-clean-360/
+LibriSpeech/train-other-500/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
