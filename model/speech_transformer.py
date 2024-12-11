@@ -43,9 +43,9 @@ class SpeechTransformer(nn.Module):
 
     def forward(self, inputs, targets, enc_padding_mask, look_ahead_mask, dec_padding_mask):
         out = self.pre_net(inputs)
-        out = self.transformer( inputs=(out, targets),
-                                enc_padding_mask=enc_padding_mask,
-                                look_ahead_mask=look_ahead_mask,
-                                dec_padding_mask=dec_padding_mask )
+        out = self.transformer(inputs=(out, targets),
+                               enc_padding_mask=enc_padding_mask,
+                               look_ahead_mask=look_ahead_mask,
+                               dec_padding_mask=dec_padding_mask )
         
         return out

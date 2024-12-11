@@ -4,7 +4,7 @@ import torch
 import torch.optim as optim
 
 from datafeeder import DataFeeder, BATCH_SIZE, id2char
-from model import SpeechTransformer, create_combined_mask, LabelSmoothingLoss, CustomSchedule, evaluate
+from model import SpeechTransformer, create_combined_mask, LabelSmoothingLoss, CustomSchedule, evaluate, create_masks
 
 EPOCHS = 1
 LAST_RUN = 0 # 0 for new training the model from scratch
@@ -12,7 +12,7 @@ DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def train_one_epoch(model, datafeeder, optimizer, criterion, epoch, learning_rate_schedule, step_count):
     model.train()
-    learning_curve_path = os.path.join(os.getcwd(), 'model_weights', f"learning_curve.csv")
+    learning_curve_path = os.path.join(os.getcwd(), 'extra', f"learning_curve.csv")
     train_data = datafeeder.get_batch()
 
     start_time = time.time()
@@ -31,22 +31,22 @@ def train_one_epoch(model, datafeeder, optimizer, criterion, epoch, learning_rat
         optimizer.zero_grad()
         step_count += 1 
 
-        combined_mask = create_combined_mask(tar)
+        enc_padding_mask, combined_mask, dec_padding_mask = create_masks(inp, tar)
         predictions = model(
             inp,
             tar,
-            enc_padding_mask=None,
+            enc_padding_mask=enc_padding_mask,
             look_ahead_mask=combined_mask,
-            dec_padding_mask=None,
+            dec_padding_mask=dec_padding_mask,
         )
         loss = criterion(gtruth, predictions)
         loss.backward()
         optimizer.step()
 
         predictions = predictions.argmax(dim=-1)
-        translated_target = [ id2char(tar[i]) for i in range(tar.shape[0]) ]
+        translated_gtruth = [ id2char(tar[i]) for i in range(gtruth.shape[0]) ]
         translated_predictions = [ id2char(predictions[i]) for i in range(predictions.shape[0]) ]
-        cer, wer = evaluate(translated_predictions, translated_target)
+        cer, wer = evaluate(translated_predictions, translated_gtruth)
         
         if step % 100 == 0:
             with open(learning_curve_path, 'a', encoding='utf8') as file:
@@ -75,7 +75,7 @@ def main():
         model_save_path = os.path.join(os.getcwd(), 'model_weights', f"speech_transformer_epoch{LAST_RUN}.pth")
         model.load_state_dict(torch.load(model_save_path, weights_only=True))
     else:
-        learning_curve_path = os.path.join(os.getcwd(), 'model_weights', f"learning_curve.csv")
+        learning_curve_path = os.path.join(os.getcwd(), 'extra', f"learning_curve.csv")
         with open(learning_curve_path, 'w', encoding='utf8') as file:
             file.write(f"loss,cer,wer")
             
