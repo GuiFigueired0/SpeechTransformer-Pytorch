@@ -124,8 +124,8 @@ class DataFeeder:
                 for idx in batch_indices:
                     fbank = self.compute_fbank(self.wav_lst[idx])
 
-                    label = [SOS] + self.char2id(self.char_list[idx]) + [EOS]
-                    g_truth = [SOS] + self.char2id(self.char_list[idx]) + [EOS]
+                    label = [SOS] + self.char2id(self.char_list[idx])
+                    g_truth = self.char2id(self.char_list[idx]) + [EOS]
 
                     wav_data_lst.append(fbank)
                     label_data_lst.append(label)
