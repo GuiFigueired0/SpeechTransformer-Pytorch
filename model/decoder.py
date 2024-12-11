@@ -7,7 +7,7 @@ from .feed_foward import FeedForwardNetwork
 from .attention import MultiHeadAttention
 
 class DecoderLayer(nn.Module):
-    def __init__(self, d_model, num_heads, dff, dropout=0.1):
+    def __init__(self, d_model, num_heads, dff, dropout):
         super(DecoderLayer, self).__init__()
         
         self.mha1 = MultiHeadAttention(d_model, num_heads)
@@ -35,10 +35,9 @@ class DecoderLayer(nn.Module):
         ffn_output = self.dropout3(ffn_output)
         out3 = self.layernorm3(out2 + ffn_output)
         return out3
-
-
+    
 class Decoder(nn.Module):
-    def __init__(self, num_layers, d_model, num_heads, dff, vocab_size, max_seq_len, dropout=0.1):
+    def __init__(self, num_layers, d_model, num_heads, dff, vocab_size, dropout):
         super(Decoder, self).__init__()
         self.d_model = d_model
         self.num_layers = num_layers
@@ -54,7 +53,7 @@ class Decoder(nn.Module):
         seq_len = x.size(1)
         
         x = self.embedding(x) * torch.sqrt(torch.tensor(self.d_model, dtype=torch.float32))
-        x += positional_encoding(seq_len, self.d_model)
+        x += positional_encoding(seq_len, self.d_model, x.device)
 
         for layer in self.layers:
             x = layer(x, enc_output, look_ahead_mask, padding_mask)

@@ -29,18 +29,16 @@ class EncoderLayer(nn.Module):
         
         return out2
 
-
 class Encoder(nn.Module):
-    def __init__(self, num_layers, d_model, num_heads, dff, max_seq_len, dropout=0.1):
+    def __init__(self, num_layers, d_model, num_heads, dff, dropout=0.1):
         super(Encoder, self).__init__()
         
         self.d_model = d_model
         self.num_layers = num_layers
+        
+        self.input_proj = nn.Linear(64 * 20, self.d_model)
 
-        self.input_proj = nn.Sequential(
-            nn.Linear(d_model, d_model),
-            nn.LayerNorm(d_model)
-        )
+        self.layer_norm = nn.LayerNorm(d_model)
         self.dropout = nn.Dropout(dropout)
         
         self.layers = nn.ModuleList(
@@ -48,10 +46,15 @@ class Encoder(nn.Module):
         )
 
     def forward(self, x, mask=None):
-        seq_len = x.size(1)
+        x = x.permute(0, 2, 1, 3)
+        batch_size, seq_len, _, _ = x.size()
         
+        x = x.reshape(batch_size, seq_len, -1)
         x = self.input_proj(x)
-        x += positional_encoding(seq_len, self.d_model)
+
+        pos_enc = positional_encoding(seq_len, self.d_model, x.device)
+        x += pos_enc
+        x = self.layer_norm(x)
         x = self.dropout(x)
 
         for layer in self.layers:

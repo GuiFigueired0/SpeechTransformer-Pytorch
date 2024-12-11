@@ -1,99 +1,82 @@
 import os
 import time
 import torch
-import torch.nn as nn
 import torch.optim as optim
-from torch.utils.data import DataLoader
 
-from datafeeder import DataFeeder
-from model import SpeechTransformer, create_masks
+from datafeeder import DataFeeder, BATCH_SIZE
+from model import SpeechTransformer, create_combined_mask, LabelSmoothingLoss
 
-DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-EPOCHS = 10
-BATCH_SIZE = 32
-LEARNING_RATE = 0.0001
+EPOCHS = 1
+LAST_RUN = 0 # 0 for new training the model from scratch
 CLIP_GRAD_NORM = 1.0
-MODEL_SAVE_PATH = "speech_transformer.pth"
+LEARNING_RATE = 0.0001
+DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-# LOSS FUNCTION
-def label_smoothing_loss(predictions, targets, vocab_size, smoothing=0.1):
-    """
-    Implements label smoothing loss.
-    """
-    confidence = 1.0 - smoothing
-    smoothing_value = smoothing / (vocab_size - 1)
-    one_hot = torch.zeros_like(predictions).scatter(1, targets.unsqueeze(1), confidence)
-    one_hot = one_hot + smoothing_value
-    log_probs = nn.functional.log_softmax(predictions, dim=-1)
-    loss = -(one_hot * log_probs).sum(dim=-1).mean()
-    return loss
-
-# TRAINING FUNCTION
 def train_one_epoch(model, datafeeder, optimizer, criterion, epoch):
     model.train()
-    epoch_loss = 0
-    epoch_acc = 0
+    learning_curve_path = os.path.join(os.getcwd(), 'model_weights', f"learning_curve.csv")
     train_data = datafeeder.get_batch()
 
     start_time = time.time()
-    for step in range(len(datafeeder)//BATCH_SIZE):
+    for step in range(len(datafeeder) // BATCH_SIZE):
+        batch_time = time.time()
         batch = next(train_data)
-        
-        inp = torch.tensor(batch['the_inputs'], dtype=torch.float32).to(DEVICE)  # Convert to float32 tensor. Shape: (batch, time, features)
-        tar = torch.tensor(batch['the_labels'], dtype=torch.int64).to(DEVICE)   # Convert to int64 tensor. Shape: (batch, time)
-        gtruth = torch.tensor(batch['ground_truth'], dtype=torch.int64).to(DEVICE)  # Convert to int64 tensor. Shape: (batch, time)
 
-        tar_inp = tar[:, :-1]  # Input to decoder
-        tar_real = gtruth[:, 1:]  # Targets for loss
+        inp = torch.tensor(batch['the_inputs'], dtype=torch.float32).to(DEVICE)
+        tar = torch.tensor(batch['the_labels'], dtype=torch.int64).to(DEVICE)
+        gtruth = torch.tensor(batch['ground_truth'], dtype=torch.int64).to(DEVICE)
 
         optimizer.zero_grad()
-        
-        # Masks
-        enc_padding_mask, combined_mask, dec_padding_mask = create_masks(inp, tar_inp)
 
-        # Forward pass
-        predictions = model(inp, tar_inp, training=True,
-                            enc_padding_mask=enc_padding_mask,
-                            look_ahead_mask=combined_mask,
-                            dec_padding_mask=dec_padding_mask)
-        loss = criterion(predictions.view(-1, predictions.size(-1)), tar_real.reshape(-1))
-        
-        # Backward pass
+        combined_mask = create_combined_mask(tar)
+        predictions = model(
+            inp,
+            tar,
+            enc_padding_mask=None,
+            look_ahead_mask=combined_mask,
+            dec_padding_mask=None,
+        )
+        loss = criterion(gtruth, predictions)
         loss.backward()
         torch.nn.utils.clip_grad_norm_(model.parameters(), CLIP_GRAD_NORM)
         optimizer.step()
 
-        # Update metrics
-        epoch_loss += loss.item()
-        acc = (predictions.argmax(dim=-1) == tar_real).float().mean().item()
-        epoch_acc += acc
+        acc = (predictions.argmax(dim=-1) == gtruth).float().mean().item()
+        
+        if step % 100 == 0:
+            with open(learning_curve_path, 'a', encoding='utf8') as file:
+                file.write(f"\n{loss.item():.4f},{acc:.4f}")
 
-        print(f"Epoch {epoch + 1}, Step {step + 1}, Loss: {loss.item():.4f}, Accuracy: {acc:.4f}")
-
-    avg_loss = epoch_loss / len(datafeeder)
-    avg_acc = epoch_acc / len(datafeeder)
-    print(f"Epoch {epoch + 1} completed in {time.time() - start_time:.2f}s")
-    print(f"Average Loss: {avg_loss:.4f}, Average Accuracy: {avg_acc:.4f}")
-    return avg_loss, avg_acc
+        print(f"Epoch {epoch + 1}. Batch {step + 1}. Loss: {loss.item():.4f}. Accuracy: {acc:.4f}. Time: {time.time() - batch_time:.2f}s.")
+    print(f'Total time of the epoch: {time.time() - start_time:.2f}s,')
 
 def main():
-    torch.manual_seed(42)
-    
     print("Loading data...")
     train_feeder = DataFeeder(mode='dev', shuffle_data=True)
-
+    
     print("Initializing model...")
-    model = SpeechTransformer(target_vocab_size=len(train_feeder.vocab)).to(DEVICE)
+    model = SpeechTransformer(target_vocab_size=train_feeder.vocab_size()).to(DEVICE)
+    criterion = LabelSmoothingLoss(vocab_size=train_feeder.vocab_size())
     optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
-    criterion = label_smoothing_loss
-
-    print("Training model...")
+    
+    # Load partially trained model
+    if LAST_RUN > 0:
+        model_save_path = os.path.join(os.getcwd(), 'model_weights', f"speech_transformer_epoch{LAST_RUN}.pth")
+        model.load_state_dict(torch.load(model_save_path, weights_only=True))
+    else:
+        learning_curve_path = os.path.join(os.getcwd(), 'model_weights', f"learning_curve.csv")
+        with open(learning_curve_path, 'w', encoding='utf8') as file:
+            file.write(f"loss,accuracy")
+            
+    print("Starting training...")
+    print(f"Number of steps by epoch: {len(train_feeder) // BATCH_SIZE}")
     for epoch in range(EPOCHS):
+        print(f"Epoch {epoch + 1}/{EPOCHS}")
         train_one_epoch(model, train_feeder, optimizer, criterion, epoch)
-
-    print("Saving model...")
-    torch.save(model.state_dict(), MODEL_SAVE_PATH)
-    print(f"Model saved to {MODEL_SAVE_PATH}")
+        
+        model_save_path = os.path.join(os.getcwd(), 'model_weights', f"speech_transformer_epoch{epoch+1+LAST_RUN}.pth")
+        torch.save(model.state_dict(), model_save_path)
+        print(f"Model saved to {model_save_path}")
 
 if __name__ == "__main__":
     main()

@@ -143,6 +143,9 @@ class DataFeeder:
 
     def __len__(self):
         return self.data_length
+    
+    def vocab_size(self):
+        return len(self.vocab)
 
 if __name__ == '__main__':
     feeder = DataFeeder(mode='dev', shuffle_data=True)

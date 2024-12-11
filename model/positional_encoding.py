@@ -1,5 +1,4 @@
 import torch
-import math
 
 def get_angles(pos, i, d_model):
     """
@@ -8,18 +7,19 @@ def get_angles(pos, i, d_model):
     angle_rates = 1 / (10000 ** (2 * (i // 2) / d_model))
     return pos * angle_rates
 
-def positional_encoding(position, d_model):
+def positional_encoding(position, d_model, device):
     """
     Generates sinusoidal positional encoding.
     Args:
         position: Number of positions (max sequence length).
         d_model: Depth of the model.
+        device: Device to place the tensor (e.g., 'cpu' or 'cuda:0').
     Returns:
         Tensor of shape (1, position, d_model) with positional encodings.
     """
     angle_rads = get_angles(
-        torch.arange(position).unsqueeze(1),
-        torch.arange(d_model).unsqueeze(0),
+        torch.arange(position, device=device).unsqueeze(1),
+        torch.arange(d_model, device=device).unsqueeze(0),
         d_model
     )
     
