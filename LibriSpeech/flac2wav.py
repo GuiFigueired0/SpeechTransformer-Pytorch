@@ -5,8 +5,8 @@ from pydub import AudioSegment
 
 def convert_flac_to_wav(file_path):
     """
-    Convert a .flac file to .wav.
-    
+    Convert a .flac file to .wav and delete the original .flac file.
+
     Args:
         file_path (str): Full path of the .flac file.
     """
@@ -14,7 +14,11 @@ def convert_flac_to_wav(file_path):
         wav_path = file_path.with_suffix('.wav')
         audio = AudioSegment.from_file(file_path, format="flac")
         audio.export(wav_path, format="wav")
-        #print(f"Convertido: {file_path} -> {wav_path}")
+        #print(f"Converted: {file_path} -> {wav_path}")
+        
+        # Delete the original .flac file
+        file_path.unlink()
+        #print(f"Deleted original file: {file_path}")
     except Exception as e:
         print(f"Error converting {file_path}: {e}")
 

@@ -8,7 +8,7 @@ from speechpy import processing, feature
 # Constants and parameters
 DEV_PARTS = ['dev-clean']
 TEST_PARTS = ['test-clean']
-TRAIN_PARTS = ['train-clean-100', 'train-clean-360']
+TRAIN_PARTS = ['train-clean-360'] # 'train-clean-100'
 
 PAD = 0
 SOS = 1
