@@ -26,11 +26,11 @@ def evaluate_model(model, datafeeder):
             inp = torch.tensor(batch['the_inputs'], dtype=torch.float32).to(DEVICE)
             gtruth = torch.tensor(batch['ground_truth'], dtype=torch.int64).to(DEVICE)
 
-            max_len = gtruth.size(1)
-            decoded_sequences = model.beam_search_decoding(inp, max_len, SOS, EOS)
-
             translated_gtruth = [id2char(gtruth[i]) for i in range(gtruth.size(0))]
-            translated_predictions = [id2char(seq.tolist()[1:]) for seq in decoded_sequences]
+            sequence_sizes = [ len(seq) - 8 for seq in translated_gtruth ] # -8 is for the SOS> and EOS> excess
+            
+            decoded_sequences = model.beam_search_decoding(inp, sequence_sizes, SOS, EOS)
+            translated_predictions = [id2char(seq.tolist()) for seq in decoded_sequences]
 
             cer, wer = evaluate(translated_predictions, translated_gtruth)
             total_cer += cer * len(batch['ground_truth'])
@@ -55,7 +55,7 @@ def main():
 
     print("Loading model...")
     model_save_path = os.path.join(os.getcwd(), 'model_weights', f'speech_transformer_epoch{LAST_RUN}.pth')
-    model = SpeechTransformer(target_vocab_size=test_feeder.vocab_size()).to(DEVICE)
+    model = SpeechTransformer(target_vocab_size=test_feeder.vocab_size(), num_layers_dec=6, num_layers_enc=12, dff=2048).to(DEVICE)
     model.load_state_dict(torch.load(model_save_path, map_location=DEVICE, weights_only=True))
 
     print("Evaluating model...")

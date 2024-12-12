@@ -21,7 +21,7 @@ WINDOW_SIZE = 0.025
 CHARS = ['<PAD>', '<SOS>', '<EOS>', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '_', '\'']
 
 def id2char(ids):
-    return ''.join([CHARS[id] for id in ids if id])
+    return ''.join([CHARS[id] for id in ids if id > 2])
 class DataFeeder:
     def __init__(self, mode='train', shuffle_data=True, max_seq_len=None): # Passing a value for max_seq_len will make the initiation significantly slower
         self.mode = mode

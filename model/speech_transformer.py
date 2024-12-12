@@ -53,7 +53,7 @@ class SpeechTransformer(nn.Module):
         
         return out
 
-    def beam_search_decoding(self, inp, max_len, start_token, end_token):
+    def beam_search_decoding(self, inp, sequence_sizes, start_token, end_token):
         """
         Perform beam search decoding within the SpeechTransformer model.
         Args:
@@ -72,11 +72,12 @@ class SpeechTransformer(nn.Module):
         enc_output = self.pre_net(inp)
         enc_output = self.transformer.encoder(x=enc_output, mask=enc_padding_mask)
 
-        for _ in range(max_len):
+        max_len = max(sequence_sizes)
+        for i in range(max_len):
             all_candidates = []
             for batch_idx, batch_seq in enumerate(sequences):
                 for seq, score in batch_seq:
-                    if seq[-1] == end_token:
+                    if (seq[-1] == end_token) or (i >= sequence_sizes[batch_idx]):
                         all_candidates.append((seq, score))
                         continue
 

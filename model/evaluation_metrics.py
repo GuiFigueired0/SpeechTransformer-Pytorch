@@ -17,8 +17,8 @@ def evaluate(predicted, ground_truth):
     total_wer_distance = 0
 
     for pred, gt in zip(predicted, ground_truth):
-        pred = pred.replace("<PAD>", "").replace("_", " ").strip()
-        gt = gt.replace("<PAD>", "").replace("_", " ").strip()
+        pred = pred.replace("_", " ").strip()
+        gt = gt.replace("_", " ").strip()
 
         total_chars += len(gt)
         total_words += len(gt.split())
