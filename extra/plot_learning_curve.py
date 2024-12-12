@@ -4,7 +4,9 @@ import matplotlib.pyplot as plt
         
 def plot_learning_curve(batch_stats, save=False, show=False):
     plt.figure(figsize=(10, 5))
-    plt.plot(batch_stats['accuracy'], label="Accuracy")
+    plt.plot(batch_stats['cer'], label="CER")
+    plt.plot(batch_stats['wer'], label="WER")
+    plt.plot(batch_stats['acc'], label="Accuracy")
     plt.plot(batch_stats['loss'], label="Loss")
     plt.title("Learning Curve")
     plt.xlabel("Batch (every 100 steps)")

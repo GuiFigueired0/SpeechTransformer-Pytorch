@@ -44,20 +44,21 @@ def train_one_epoch(model, datafeeder, optimizer, criterion, epoch, learning_rat
         optimizer.step()
 
         predictions = predictions.argmax(dim=-1)
-        translated_gtruth = [ id2char(tar[i]) for i in range(gtruth.shape[0]) ]
+        translated_gtruth = [ id2char(gtruth[i]) for i in range(gtruth.shape[0]) ]
         translated_predictions = [ id2char(predictions[i]) for i in range(predictions.shape[0]) ]
         cer, wer = evaluate(translated_predictions, translated_gtruth)
+        acc = (predictions == gtruth).float().mean().item()
         
         if step % 100 == 0:
             with open(learning_curve_path, 'a', encoding='utf8') as file:
-                file.write(f"\n{loss.item():.4f},{cer:.4f},{wer:.4f}")
+                file.write(f"\n{loss.item():.4f},{cer:.4f},{wer:.4f},{acc:.4f}")
 
-        print(f"Epoch {epoch + 1}. Batch {step + 1}. Loss: {loss.item():.4f}. CER: {cer:.4f}. WER: {wer:.4f}. Time: {time.time() - batch_time:.2f}s.")
+        print(f"Epoch {epoch + 1}. Batch {step + 1}. Loss: {loss.item():.4f}. CER: {cer:.4f}. WER: {wer:.4f}. Acc: {acc:.4f}. Time: {time.time() - batch_time:.2f}s.")
     print(f'Total time of the epoch: {time.time() - start_time:.2f}s,')
 
 def main():
     print("Loading data...")
-    train_feeder = DataFeeder(mode='dev', shuffle_data=True)
+    train_feeder = DataFeeder(mode='train', shuffle_data=True)
     steps_per_epoch = len(train_feeder) // BATCH_SIZE
     step_count = max(steps_per_epoch * LAST_RUN, 1)
     
@@ -77,7 +78,7 @@ def main():
     else:
         learning_curve_path = os.path.join(os.getcwd(), 'extra', f"learning_curve.csv")
         with open(learning_curve_path, 'w', encoding='utf8') as file:
-            file.write(f"loss,cer,wer")
+            file.write(f"loss,cer,wer,acc")
             
     print("Starting training...")
     print(f"Number of steps by epoch: {steps_per_epoch}")
