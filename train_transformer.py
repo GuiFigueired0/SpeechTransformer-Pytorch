@@ -4,9 +4,9 @@ import torch
 import torch.optim as optim
 
 from datafeeder import DataFeeder, BATCH_SIZE, id2char
-from model import SpeechTransformer, create_combined_mask, LabelSmoothingLoss, CustomSchedule, evaluate, create_masks
+from model import SpeechTransformer, LabelSmoothingLoss, CustomSchedule, evaluate, create_masks
 
-EPOCHS = 1
+EPOCHS = 3
 LAST_RUN = 0 # 0 for new training the model from scratch
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
