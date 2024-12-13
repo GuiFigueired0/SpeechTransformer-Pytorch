@@ -1,13 +1,12 @@
 import os
 import time
 import torch
-import torch.optim as optim
 
 from datafeeder import DataFeeder, BATCH_SIZE, id2char
 from model import SpeechTransformer, LabelSmoothingLoss, CustomSchedule, evaluate, create_masks
 
-EPOCHS = 3
-LAST_RUN = 0 # 0 for new training the model from scratch
+EPOCHS = 2
+LAST_RUN = 3 # 0 for new training the model from scratch
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def train_one_epoch(model, datafeeder, optimizer, criterion, epoch, learning_rate_schedule, step_count):

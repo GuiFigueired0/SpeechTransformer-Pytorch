@@ -5,7 +5,7 @@ import torch
 from datafeeder import DataFeeder, id2char, BATCH_SIZE, SOS, EOS
 from model import SpeechTransformer, evaluate
 
-LAST_RUN = 1
+LAST_RUN = 5
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def evaluate_model(model, datafeeder):
@@ -55,7 +55,7 @@ def main():
 
     print("Loading model...")
     model_save_path = os.path.join(os.getcwd(), 'model_weights', f'speech_transformer_epoch{LAST_RUN}.pth')
-    model = SpeechTransformer(target_vocab_size=test_feeder.vocab_size(), num_layers_dec=6, num_layers_enc=12, dff=2048).to(DEVICE)
+    model = SpeechTransformer(target_vocab_size=test_feeder.vocab_size()).to(DEVICE)
     model.load_state_dict(torch.load(model_save_path, map_location=DEVICE, weights_only=True))
 
     print("Evaluating model...")

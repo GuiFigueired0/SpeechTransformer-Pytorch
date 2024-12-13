@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
         
 def plot_learning_curve(batch_stats, save=False, show=False):
-    plt.figure(figsize=(10, 5))
+    plt.figure(figsize=(20, 5))
     plt.plot(batch_stats['cer'], label="CER")
     plt.plot(batch_stats['wer'], label="WER")
     plt.plot(batch_stats['acc'], label="Accuracy")

@@ -6,7 +6,7 @@ from .decoder import Decoder
 from .pre_net import Pre_Net
 from .input_mask import create_masks, create_combined_mask, create_padding_mask
 
-BEAM_SIZE = 2
+BEAM_SIZE = 3
 
 class Transformer(nn.Module):
     def __init__(self, num_layers_enc, num_layers_dec, d_model, num_heads, dff, target_vocab_size, dropout):
