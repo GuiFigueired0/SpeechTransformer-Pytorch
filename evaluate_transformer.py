@@ -5,7 +5,7 @@ import torch
 from datafeeder import DataFeeder, id2char, BATCH_SIZE, SOS, EOS
 from model import SpeechTransformer, evaluate
 
-LAST_RUN = 5
+LAST_RUN = 10
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def evaluate_model(model, datafeeder):

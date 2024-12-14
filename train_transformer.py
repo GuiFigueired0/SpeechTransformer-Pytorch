@@ -5,8 +5,8 @@ import torch
 from datafeeder import DataFeeder, BATCH_SIZE, id2char
 from model import SpeechTransformer, LabelSmoothingLoss, CustomSchedule, evaluate, create_masks
 
-EPOCHS = 2
-LAST_RUN = 3 # 0 for new training the model from scratch
+EPOCHS = 5
+LAST_RUN = 5 # 0 for new training the model from scratch
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def train_one_epoch(model, datafeeder, optimizer, criterion, epoch, learning_rate_schedule, step_count):
@@ -14,7 +14,9 @@ def train_one_epoch(model, datafeeder, optimizer, criterion, epoch, learning_rat
     learning_curve_path = os.path.join(os.getcwd(), 'extra', f"learning_curve.csv")
     train_data = datafeeder.get_batch()
 
+    
     start_time = time.time()
+    total_cer, total_wer, total_acc = 0, 0, 0  
     for step in range(len(datafeeder) // BATCH_SIZE):
         batch_time = time.time()
         batch = next(train_data)
@@ -48,10 +50,14 @@ def train_one_epoch(model, datafeeder, optimizer, criterion, epoch, learning_rat
         cer, wer = evaluate(translated_predictions, translated_gtruth)
         acc = (predictions == gtruth).float().mean().item()
         
-        if step % 100 == 0:
+        total_cer += cer
+        total_wer += wer
+        total_acc += acc
+        
+        if (step+1) % 100 == 0:
             with open(learning_curve_path, 'a', encoding='utf8') as file:
-                file.write(f"\n{loss.item():.4f},{cer:.4f},{wer:.4f},{acc:.4f}")
-
+                file.write(f"\n{loss.item():.4f},{total_cer/100:.4f},{total_wer/100:.4f},{total_acc/100:.4f}")
+            total_cer, total_wer, total_acc = 0, 0, 0  
         print(f"Epoch {epoch + 1}. Batch {step + 1}. Loss: {loss.item():.4f}. CER: {cer:.4f}. WER: {wer:.4f}. Acc: {acc:.4f}. Time: {time.time() - batch_time:.2f}s.")
     print(f'Total time of the epoch: {time.time() - start_time:.2f}s,')
 
