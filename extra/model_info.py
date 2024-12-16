@@ -1,4 +1,7 @@
+import sys
 from torchinfo import summary
+
+sys.path.append('..')
 from model import SpeechTransformer
 
 def main():
