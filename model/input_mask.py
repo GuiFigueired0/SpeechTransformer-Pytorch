@@ -52,3 +52,10 @@ def create_masks(inp, tar):
     dec_padding_mask = create_padding_mask(inp[:, :audio_length, 0, 0], (batch_size, 1, text_length, audio_length))  # Shape: (batch_size, 1, text_length, audio_length)
 
     return enc_padding_mask, combined_mask, dec_padding_mask
+
+'''
+I think the masks that uses 'audio_length' are not implemented correctly, 
+But I don't know how to do it considering they are created before the beggining
+of the Pre_Net. Maybe if they were created after audio went throught the 
+convolutions, it would be easier to implement.
+'''

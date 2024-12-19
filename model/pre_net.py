@@ -83,11 +83,22 @@ class Pre_Net(nn.Module):
     def forward(self, inputs):
         inputs = inputs.permute(0, 3, 1, 2)
 
-        out = F.tanh(self.bn1(self.downsample1(inputs)))
-        out = F.tanh(self.bn2(self.downsample2(out)))
+        out = F.relu(self.bn1(self.downsample1(inputs)))
+        out = F.relu(self.bn2(self.downsample2(out)))
 
         for layer in self.twoD_layers:
             out = layer(out)
 
         return out
+    
+'''
+I think it's here where the problem in my implementation lies. 
+I use the 2D Attention mechanism after the convolution but 
+before the Transformer, and at the beggining of the Encoder the 
+input is projected so one dimension is removed. I did this way 
+to follow the base code. But maybe the right way to do it is to 
+use the 2D-Attention mechanism inside the Encoder, in the place 
+of tradicional Multi-Head, and keep the 4 dimensions input until
+the end of the Encoder. But I don't know how to do that.
+'''
 

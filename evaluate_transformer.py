@@ -41,7 +41,6 @@ def evaluate_model(model, datafeeder):
             if step % 10 == 0:
                 print('Example of transcription:', translated_gtruth[0])
                 print('Predicted transcription:', translated_predictions[0])
-            break
 
     avg_cer = total_cer / num_samples
     avg_wer = total_wer / num_samples
