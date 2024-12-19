@@ -10,6 +10,8 @@ This repository contains the source code of an [SpeechTransformer](https://sci-h
 1. [Environment Configuration](#environment-configuration)
 2. [Dataset](#dataset)
 3. [Scripts](#scripts)
+4. [Model Summary](#model-summary)
+5. [Results](#results)
 
 ---
 
@@ -71,4 +73,47 @@ Run the evaluate_transformer.py script to evaluate the trained model on the test
 python evaluate_transformer.py
 ```
 
+---
+
+## Model Summary
+```
+===========================================================================                               
+Layer (type:depth-idx)                             Param #                                                
+===========================================================================
+SpeechTransformer                                  --
+├─Pre_Net: 1-1                                     --
+│    └─Conv2d: 2-1                                 1,792
+│    └─BatchNorm2d: 2-2                            128
+│    └─Conv2d: 2-3                                 36,928
+│    └─BatchNorm2d: 2-4                            128
+│    └─ModuleList: 2-5                             --
+│    │    └─TwoD_Attention_layer: 3-1              259,200
+│    │    └─TwoD_Attention_layer: 3-2              259,200
+├─Transformer: 1-2                                 --
+│    └─Encoder: 2-6                                --
+│    │    └─Linear: 3-3                            327,936
+│    │    └─LayerNorm: 3-4                         512
+│    │    └─Dropout: 3-5                           --
+│    │    └─ModuleList: 3-6                        6,318,080
+│    └─Decoder: 2-7                                --
+│    │    └─Embedding: 3-7                         7,936
+│    │    └─ModuleList: 3-8                        4,213,760
+│    │    └─Linear: 3-9                            7,967
+===========================================================================
+Total params: 11,433,567
+Trainable params: 11,433,567
+Non-trainable params: 0
+===========================================================================
+```
+
 **Note:** For simplification, all the hyperparameters were defined directely in the files. If you want to change them, you'll need to change the files manually.
+
+---
+
+## Results
+
+### Learning Curve (10 epochs on train-clean-360 with batch_size=8)
+![Learning Curve](extra/learning_curve.png)
+
+### Evaluation Sample
+![Evaluation Sample](extra/evaluation_sample.png)
